@@ -8,14 +8,54 @@ from datetime import datetime
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 AUTO_LOGIN_SCRIPT = os.path.join(SCRIPT_DIR, "wifi_auto_login.py")
 LOG_FILE = os.path.join(SCRIPT_DIR, "wifi_monitor.log")
+LOG_DATE_FILE = os.path.join(SCRIPT_DIR, ".last_log_date")
+
+def check_and_rotate_log():
+    """Check if we need to rotate/reset the log file daily or if it's too large"""
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Check if we have a stored date
+        last_date = ""
+        if os.path.exists(LOG_DATE_FILE):
+            with open(LOG_DATE_FILE, "r") as f:
+                last_date = f.read().strip()
+        
+        # Check log file size (if > 5MB, force rotation)
+        log_too_large = False
+        if os.path.exists(LOG_FILE):
+            file_size = os.path.getsize(LOG_FILE)
+            if file_size > 5 * 1024 * 1024:  # 5MB
+                log_too_large = True
+        
+        # If date changed or log too large, clear the log
+        if last_date != today or log_too_large:
+            # Clear old log
+            with open(LOG_FILE, "w", encoding="utf-8") as f:
+                rotation_reason = "Daily" if last_date != today else "Size Limit"
+                f.write(f"=== WiFi Monitor Log Started: {today} ({rotation_reason} Rotation) ===\n")
+            
+            # Update date file
+            with open(LOG_DATE_FILE, "w") as f:
+                f.write(today)
+                
+            return True  # Log was rotated
+        return False  # No rotation needed
+        
+    except Exception as e:
+        # If anything fails, just continue
+        return False
 
 def log_message(message):
-    """Log message to file and console"""
+    """Log message to file and console with daily rotation"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {message}"
     print(log_entry)
     
     try:
+        # Check if we need to rotate log first
+        check_and_rotate_log()
+        
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(log_entry + "\n")
     except:

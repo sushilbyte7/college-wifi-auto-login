@@ -8,8 +8,36 @@ import os
 import sys
 import logging
 
-# Set up logging
-log_path = os.path.join(os.path.dirname(__file__), 'wifi_login.log')
+def setup_daily_log_rotation():
+    """Setup logging with daily rotation"""
+    log_path = os.path.join(os.path.dirname(__file__), 'wifi_login.log')
+    log_date_file = os.path.join(os.path.dirname(__file__), '.last_login_log_date')
+    
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        # Check if we need to rotate log
+        last_date = ""
+        if os.path.exists(log_date_file):
+            with open(log_date_file, "r") as f:
+                last_date = f.read().strip()
+        
+        # If date changed, clear the log
+        if last_date != today:
+            if os.path.exists(log_path):
+                with open(log_path, "w") as f:
+                    f.write(f"=== WiFi Auto-Login Log Started: {today} ===\n")
+            
+            # Update date file
+            with open(log_date_file, "w") as f:
+                f.write(today)
+    except:
+        pass  # If rotation fails, continue with existing log
+    
+    return log_path
+
+# Set up logging with daily rotation
+log_path = setup_daily_log_rotation()
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
