@@ -59,11 +59,70 @@ def get_connected_wifi_name():
         return None
 
 def check_internet_connectivity():
+    """Check if we have actual internet access by trying HTTP requests"""
     try:
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
-        return True
-    except:
+        # Try multiple reliable endpoints
+        test_urls = [
+            "http://www.google.com",
+            "http://httpbin.org/ip", 
+            "http://www.msftconnecttest.com/connecttest.txt"
+        ]
+        
+        for url in test_urls:
+            try:
+                response = requests.get(url, timeout=5, allow_redirects=False)
+                # Check if we get redirected to captive portal
+                if response.status_code == 302 or response.status_code == 301:
+                    location = response.headers.get('Location', '')
+                    if '10.11.200.1' in location or 'httpclient.html' in location:
+                        logger.info(f"Captive portal detected! Redirected to: {location}")
+                        return False
+                elif response.status_code == 200:
+                    # Additional check: make sure content is not captive portal page
+                    if 'httpclient.html' not in response.text and '10.11.200.1' not in response.text:
+                        logger.info(f"Internet connectivity confirmed via {url}")
+                        return True
+                    else:
+                        logger.info("Captive portal page detected in response content")
+                        return False
+            except requests.exceptions.RequestException:
+                continue
+                
+        logger.info("No internet access - all HTTP tests failed")
         return False
+        
+    except Exception as e:
+        logger.error(f"Internet connectivity check error: {e}")
+        return False
+
+def detect_captive_portal():
+    """Specifically detect college captive portal"""
+    try:
+        logger.info("Checking for captive portal...")
+        # Try to access a simple website and check for redirects
+        response = requests.get("http://www.google.com", timeout=5, allow_redirects=False)
+        
+        if response.status_code in [302, 301, 307]:
+            location = response.headers.get('Location', '')
+            logger.info(f"Redirect detected to: {location}")
+            if '10.11.200.1' in location or 'httpclient.html' in location:
+                logger.info("College captive portal detected!")
+                return True
+        
+        # Try direct access to portal
+        try:
+            portal_response = requests.get(PORTAL_URL, timeout=5)
+            if portal_response.status_code == 200:
+                logger.info("Portal page accessible - login required")
+                return True
+        except:
+            pass
+            
+        return False
+        
+    except Exception as e:
+        logger.error(f"Captive portal detection error: {e}")
+        return True  # Assume portal exists if we can't check
 
 def is_portal_accessible():
     try:
@@ -122,7 +181,13 @@ def smart_wifi_handler():
         logger.info("Internet is already working! No login needed.")
         return True
     
-    logger.info("No internet access detected. Starting login process...")
+    logger.info("No internet access detected.")
+    
+    # Check for captive portal
+    if detect_captive_portal():
+        logger.info("Captive portal detected! Starting login process...")
+    else:
+        logger.warning("No captive portal detected but internet not working. Trying login anyway...")
     
     # Check if portal is accessible
     if not is_portal_accessible():
@@ -166,7 +231,7 @@ def main():
             if len(sys.argv) <= 1 or sys.argv[1] != "--service":
                 print("✅ Login successful! Script will now exit.")
         else:
-            logger.error("❌ WiFi login process failed!")
+            logger.error("WiFi login process failed!")
             if len(sys.argv) <= 1 or sys.argv[1] != "--service":
                 print("❌ Login failed! Check logs for details.")
                 
