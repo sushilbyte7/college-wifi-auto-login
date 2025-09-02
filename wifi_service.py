@@ -9,7 +9,7 @@ import sys
 import logging
 
 # Set up logging
-log_path = os.path.join(os.path.dirname(__file__), 'wifi_login.log')
+log_path = None
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',

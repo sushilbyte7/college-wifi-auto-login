@@ -99,7 +99,7 @@ echo Files created:
 echo - wifi_auto_login.py   (One-time login script)
 echo - wifi_monitor.py      (Connection monitor)
 echo - wifi_monitor.log     (Monitor activity log)
-echo - wifi_login.log       (Login attempt log)
+
 echo.
 echo Usage:
 echo - Monitor runs automatically at startup

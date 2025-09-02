@@ -12,7 +12,8 @@ An intelligent, event-driven WiFi auto-login system for college networks that ru
 - ⚡ **One-Time Execution**: Runs once per connection, then exits
 - 🔋 **Resource Efficient**: No continuous monitoring waste
 - 🚀 **Auto-Startup**: Configurable Windows startup integration
-- 📝 **Detailed Logging**: Separate logs for monitoring and login attempts
+- 📝 **Centralized Logging**: Single log file for all events and errors
+- 🗂️ **Daily Log Rotation**: Automatic log cleanup to save space
 - ⚙️ **Easy Configuration**: Simple INI file configuration
 
 ## 🏗️ Architecture
@@ -25,7 +26,8 @@ An intelligent, event-driven WiFi auto-login system for college networks that ru
         │                                       │
         ▼                                       ▼
 ┌─────────────────┐                    ┌──────────────────┐
-│ wifi_monitor.log│                    │  wifi_login.log  │
+│ wifi_monitor.log│ ◄─────────────────│ Error Logging    │
+│ (Daily Reset)   │                    │ (Errors Only)    │
 └─────────────────┘                    └──────────────────┘
 ```
 
@@ -73,9 +75,7 @@ An intelligent, event-driven WiFi auto-login system for college networks that ru
 ├── setup.bat               # Windows setup wizard
 ├── README.md               # This file
 ├── LICENSE                 # MIT License
-└── logs/
-    ├── wifi_monitor.log    # Connection monitoring logs
-    └── wifi_login.log      # Login attempt logs
+└── wifi_monitor.log        # Centralized logging (daily rotation)
 ```
 
 ## ⚙️ Configuration
@@ -127,11 +127,13 @@ MAX_LOGIN_ATTEMPTS = 3
 [2025-08-05 10:00:05] ✅ Auto-login process completed successfully!
 ```
 
-### Login Log (`wifi_login.log`)
+### System Logs (`wifi_monitor.log`)
 ```log
-[2025-08-05 10:00:02] INFO - Attempting WiFi login...
-[2025-08-05 10:00:03] INFO - Login successful!
-[2025-08-05 10:00:08] INFO - Internet connectivity confirmed!
+[2025-08-05 10:00:01] 📶 WiFi changed: 'None' → 'PCU_Student'
+[2025-08-05 10:00:01] 🎓 Connected to college WiFi: PCU_Student
+[2025-08-05 10:00:01] 🔄 Triggering auto-login process...
+[2025-08-05 10:00:02] ✅ Auto-login process completed successfully!
+[2025-08-05 10:00:02] [AUTO-LOGIN ERROR] Login failed - check credentials
 ```
 
 ## 🛠️ Manual Usage
@@ -162,7 +164,7 @@ python wifi_login.py
 2. **Login fails**
    - Verify credentials in `config.ini`
    - Check portal URL accessibility
-   - Review `wifi_login.log` for errors
+   - Review `wifi_monitor.log` for errors
 
 3. **WiFi not detected**
    - Ensure WiFi name matches exactly (case-sensitive)

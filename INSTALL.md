@@ -144,7 +144,7 @@ college-wifi-auto-login/
 ├── setup.bat                   # Setup wizard
 ├── logs/
 │   ├── wifi_monitor.log        # Monitor activity
-│   └── wifi_login.log          # Login attempts
+
 └── generated_files/            # Created by setup
     ├── wifi_monitor_hidden.vbs
     └── start_monitor_hidden.bat

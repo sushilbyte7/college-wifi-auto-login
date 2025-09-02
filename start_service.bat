@@ -17,7 +17,7 @@ if errorlevel 1 (
 
 :: Run the service
 echo Service is starting...
-echo Check wifi_login.log for detailed logs
+
 echo Press Ctrl+C to stop the service
 echo.
 
